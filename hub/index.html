@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Levrly OA Process Hub</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: sticky search bar, left section rail on desktop (chip row on phones), one long reference column. Levrly tokens: system type, black-weight tight headings, pink→purple signature gradient, light by default. */
+:root{
+  --bg:#FFFFFF; --soft:#F9FAFB; --elev:#F3F4F6; --line:#E5E7EB;
+  --fg:#111827; --muted:#4B5563; --faint:#6B7280;
+  --pink:#EC489D; --mid:#BB52C9; --purple:#8B5CF6;
+  --grad:linear-gradient(90deg,#EC489D,#BB52C9,#8B5CF6);
+  --tint:#F5F3FF; --tint-fg:#6D28D9;
+  --p1:#DC2626; --p2:#EA580C; --p3:#B45309; --p4:#6B7280; --ok:#047857; --warn-bg:#FFF7ED; --warn-fg:#9A3412;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#050309; --soft:#0D0A20; --elev:#15112C; --line:#262040;
+  --fg:#F9FAFB; --muted:#C4C2D4; --faint:#9A97B0;
+  --tint:#1C1538; --tint-fg:#C4B5FD;
+  --p1:#F87171; --p2:#FB923C; --p3:#FBBF24; --p4:#9CA3AF; --ok:#34D399; --warn-bg:#2A1A0E; --warn-fg:#FDBA74;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#050309; --soft:#0D0A20; --elev:#15112C; --line:#262040;
+  --fg:#F9FAFB; --muted:#C4C2D4; --faint:#9A97B0;
+  --tint:#1C1538; --tint-fg:#C4B5FD;
+  --p1:#F87171; --p2:#FB923C; --p3:#FBBF24; --p4:#9CA3AF; --ok:#34D399; --warn-bg:#2A1A0E; --warn-fg:#FDBA74;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+a{color:var(--tint-fg)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+.wrap{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--bg);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:16px;padding-block:12px;flex-wrap:wrap}
+.brand{font-weight:900;letter-spacing:-0.04em;font-size:18px;white-space:nowrap}
+.brand span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.search{flex:1;min-width:200px;position:relative}
+.search input{width:100%;font:inherit;padding:9px 14px 9px 36px;border:1px solid var(--line);border-radius:999px;background:var(--soft);color:var(--fg)}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint)}
+.hits{font-size:12px;color:var(--faint);white-space:nowrap}
+
+/* hero */
+.hero{background:var(--soft);border-bottom:1px solid var(--line)}
+.hero .wrap{padding-block:48px 40px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:10px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.eyebrow::before{content:"";width:5px;height:5px;border-radius:999px;background:var(--grad);flex:none}
+h1,h2,h3{font-weight:900;letter-spacing:-0.04em;line-height:1.06;text-wrap:balance;margin:0}
+h1{font-size:clamp(34px,5vw,56px);margin-top:12px}
+h2{font-size:clamp(26px,3.2vw,36px);margin-top:10px}
+h3{font-size:19px;letter-spacing:-0.02em;line-height:1.25}
+.lede{max-width:68ch;color:var(--muted);font-size:17px;margin:16px 0 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:28px;max-width:820px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.stat b{display:block;font-size:26px;font-weight:900;letter-spacing:-0.04em;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted)}
+.stat.alert b{color:var(--p2)}
+
+/* body grid */
+.layout{display:grid;grid-template-columns:210px minmax(0,1fr);gap:40px;padding-block:32px 96px}
+nav.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);align-self:start;display:flex;flex-direction:column;gap:2px;font-size:14px}
+nav.rail a{color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:8px}
+nav.rail a:hover{background:var(--elev);color:var(--fg)}
+nav.rail .grp{font-size:10px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--faint);padding:14px 10px 4px}
+main{min-width:0;display:flex;flex-direction:column;gap:72px}
+section{scroll-margin-top:90px;display:flex;flex-direction:column;gap:20px}
+.intro{color:var(--muted);max-width:70ch;margin:0}
+.sub{display:flex;flex-direction:column;gap:14px}
+.sub>h3{margin-top:8px}
+
+/* tables */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--soft);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--faint);font-weight:700;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.k{font-weight:700;white-space:nowrap}
+.num{font-variant-numeric:tabular-nums}
+
+/* cards */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.card{border:1px solid var(--line);border-radius:14px;padding:18px;background:var(--bg);display:flex;flex-direction:column;gap:8px;min-width:0}
+.card.soft{background:var(--soft)}
+.card p{margin:0;color:var(--muted);font-size:14px}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;padding:2px 9px;border-radius:999px;background:var(--elev);color:var(--muted);white-space:nowrap}
+.chip.g{background:var(--tint);color:var(--tint-fg);font-weight:600}
+ul.tight,ol.tight{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+ul.tight li::marker{color:var(--mid)}
+
+/* steps */
+.steps{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.step{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.step:last-child{border-bottom:0}
+.step .n{width:32px;height:32px;border-radius:999px;background:var(--grad);color:#fff;font-weight:800;display:grid;place-items:center;font-size:14px;font-variant-numeric:tabular-nums}
+.step h4{margin:0;font-size:16px;font-weight:800;letter-spacing:-0.01em}
+.step p{margin:4px 0 0;color:var(--muted);font-size:14px}
+.step .done{font-size:13px;color:var(--fg);margin-top:6px}
+.step .done b{color:var(--ok)}
+.branch{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.branch>div{display:flex;flex-direction:column;gap:10px;min-width:0}
+.lane{font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--tint-fg)}
+
+/* acronym rows */
+.acro{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.acro .card{gap:4px}
+.letter{font-size:30px;font-weight:900;letter-spacing:-0.04em;line-height:1;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.acro h4{margin:0;font-size:15px;font-weight:800}
+
+details.sop{border:1px solid var(--line);border-radius:14px;background:var(--bg)}
+details.sop>summary{cursor:pointer;list-style:none;padding:16px 18px;display:flex;flex-direction:column;gap:6px}
+details.sop>summary::-webkit-details-marker{display:none}
+details.sop>summary .row{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+details.sop>summary .row::after{content:"+";font-weight:700;color:var(--faint);font-size:20px;line-height:1}
+details.sop[open]>summary .row::after{content:"–"}
+details.sop>summary p{margin:0;color:var(--muted);font-size:14px}
+details.sop .body{padding:0 18px 18px;display:flex;flex-direction:column;gap:14px;font-size:14px}
+details.sop .body h5{margin:0;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint)}
+.src{font-size:13px}
+
+.note{border:1px solid var(--line);background:var(--warn-bg);color:var(--warn-fg);border-radius:12px;padding:12px 16px;font-size:14px}
+.callout{background:var(--tint);border-radius:14px;padding:16px 18px;font-size:14px;color:var(--fg)}
+.callout b{color:var(--tint-fg)}
+.quote{font-family:Georgia,serif;font-style:italic;color:var(--muted)}
+
+/* case log */
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.filters select{font:inherit;font-size:14px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--soft);color:var(--fg)}
+.filters .count{font-size:13px;color:var(--faint)}
+.pri{font-weight:700;font-size:12px;white-space:nowrap}
+.pri.P1{color:var(--p1)}.pri.P2{color:var(--p2)}.pri.P3{color:var(--p3)}.pri.P4{color:var(--p4)}
+.st{font-size:12px;padding:2px 9px;border-radius:999px;white-space:nowrap;font-weight:600}
+.st.res{background:var(--elev);color:var(--muted)}
+.st.prog{background:var(--tint);color:var(--tint-fg)}
+.st.open{background:var(--warn-bg);color:var(--warn-fg)}
+.cases td{font-size:13px}
+.cases td.issue{min-width:260px}
+.cases .id{font-family:var(--mono);font-size:12px;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:999px;background:var(--grad);color:#fff;font-weight:700;text-decoration:none;font-size:14px;border:0;cursor:pointer}
+
+.hide{display:none!important}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:24px}
+  nav.rail{position:static;flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:4px}
+  nav.rail .grp{display:none}
+  nav.rail a{white-space:nowrap;background:var(--elev)}
+  .hits{display:none}
+}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><span>Levrly</span> OA Process Hub</div>
+    <label class="search" for="q">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Search steps, SOPs, rules, cases… (try “handoff”, “20 hours”, “Stripe”)" autocomplete="off">
+    </label>
+    <span class="hits" id="hits"></span>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Operations Architect Team · Process Repository</div>
+    <h1>How the OA team runs every client</h1>
+    <p class="lede">One place for the OA lifecycle, the OPTIMIZE and UNLOCK methods, every SOP and call script, the handoff and escalation rules, and the decisions leadership made in the Escalation Tracker. Built from the 16 documents in the <em>Operations Architect Team Process</em> Drive folder, as of November 24, 2026.</p>
+    <div class="stats">
+      <div class="stat"><b>16</b><span>source documents</span></div>
+      <div class="stat"><b>4</b><span>plans: Foundation, Build, Scale, Launchpad</span></div>
+      <div class="stat"><b>33</b><span>escalations logged since May 15</span></div>
+      <div class="stat alert"><b>13</b><span>escalations with an open next step</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap layout">
+<nav class="rail" aria-label="Sections">
+  <div class="grp">Start</div>
+  <a href="#team">Team &amp; ownership</a>
+  <a href="#plans">Plans at a glance</a>
+  <div class="grp">Process</div>
+  <a href="#lifecycle">Client lifecycle</a>
+  <a href="#optimize">OPTIMIZE method</a>
+  <a href="#unlock">UNLOCK VA method</a>
+  <a href="#reddot">Red dot → blue dot</a>
+  <a href="#meetings">Meetings &amp; cadence</a>
+  <div class="grp">Library</div>
+  <a href="#sops">SOPs</a>
+  <a href="#scripts">Call scripts</a>
+  <div class="grp">Control</div>
+  <a href="#handoffs">Handoff rules</a>
+  <a href="#escalation">Escalation playbook</a>
+  <a href="#cases">Escalation case log</a>
+  <a href="#policies">Policies from escalations</a>
+  <a href="#gaps">Conflicts to resolve</a>
+  <a href="#sources">Source files</a>
+</nav>
+
+<main>
+
+<!-- TEAM -->
+<section id="team">
+  <div><div class="eyebrow">Start here</div><h2>Who owns what</h2></div>
+  <p class="intro">Every step has one owner. Ann and Haze cover each other's calls. Leadership (Justin, Tara, Joel) decides exceptions on pricing, contracts, policy and refunds.</p>
+  <div class="tbl item"><table>
+    <thead><tr><th>Person</th><th>Role</th><th>Owns</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Ann</td><td>OA Manager / Lead Operations Architect</td><td>Reviews every handoff and Blueprint report; builds the Client Roadmap, 30/60/90 and JD; delegates tasks; leads Sprint and Milestone meetings; approves every deliverable; owns UNLOCK reviews and improvement plans; first escalation point.</td></tr>
+      <tr><td class="k">Haze</td><td>Operations Architect</td><td>Account setup, access audit, VA consult calls, builds and walkthroughs, hours log and OS records, daily/weekly VA show-up monitoring and scorecards. Can accept a Sales handoff when Ann is out.</td></tr>
+      <tr><td class="k">Onboarding &amp; Blueprint Specialist</td><td>Call owner</td><td>Runs the Onboarding &amp; Blueprint call when assigned; records it; sends the Blueprint report to Ann.</td></tr>
+      <tr><td class="k">Jye / Sales</td><td>Sales</td><td>Lead in Levrly OS, contract and addendum, payment, handoff notes (Blueprint Prep Brief), booking the onboarding call; takes upgrade conversations.</td></tr>
+      <tr><td class="k">Kristine</td><td>Recruitment</td><td>Sourcing, alignment interview, scheduling the Client/VA handover; joins VA escalations; runs the replacement guarantee.</td></tr>
+      <tr><td class="k">Justin</td><td>Leadership</td><td>Escalation when a handoff isn't accepted in 2 business days; commitments Levrly can't honor; pricing and policy exceptions.</td></tr>
+      <tr><td class="k">Tara</td><td>Leadership / Operations</td><td>Billing and Stripe, contract fixes, refunds; owner on most billing and contract escalations.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- PLANS -->
+<section id="plans">
+  <div><div class="eyebrow">Start here</div><h2>Plans at a glance</h2></div>
+  <p class="intro">What the OA team delivers on each plan. <b>Only Sales quotes prices</b>; never quote upgrade or add-on prices on an OA call. Flag interest to Sales the same day.</p>
+  <div class="tbl item"><table>
+    <thead><tr><th></th><th>Foundation</th><th>Build</th><th>Scale</th><th>Launchpad</th></tr></thead>
+    <tbody>
+      <tr><td class="k">For</td><td>First VA hire plus systems and training</td><td>One VA plus an Architect who meets client and VA monthly</td><td>A team: two VAs plus weekly Architect hours</td><td>OA team carries one project for 30 days (no VA)</td></tr>
+      <tr><td class="k">VA credits</td><td class="num">1</td><td class="num">1</td><td class="num">2</td><td class="num">0</td></tr>
+      <tr><td class="k">OA time</td><td>None (20-hour block can be added)</td><td>2 h a month: 1 h client, 1 h VA</td><td>2 h a week (about 8 a month)</td><td>20 h over 30 days (4–6 weeks), logged in quarter-hours</td></tr>
+      <tr><td class="k">Goal horizon</td><td>90 days</td><td>90 days</td><td>90 days, 2 weekly habits</td><td>30 days, one blue dot</td></tr>
+      <tr><td class="k">Docs within 48 h</td><td>Client Roadmap, VA JD, 30/60/90-Day Success Guide</td><td>Same as Foundation</td><td>Roadmap, both JDs, 30/60/90 Guide</td><td>Client Roadmap, 30-Day Project Plan, Project Scoreboard</td></tr>
+      <tr><td class="k">Recurring OA rhythm</td><td>VA reviews (UNLOCK)</td><td>Monthly Architect session</td><td>Weekly 2-h Architect block + 15-min check-in</td><td>Weekly Sprint call or Milestone meeting per project</td></tr>
+      <tr><td class="k">Also includes</td><td>GHL + Real Estate Snapshot, 1,000+ SOPs, Levrly Academy, Jared James Academy, VA group coaching, LevrlyOS</td><td>Foundation + Mastermind, full Academy, live coaching (Justin, Joel bi-weekly; Andrew Tue 9:30 AM)</td><td>Everything in Build</td><td>Launchpad addendum; Sprint/Milestone booking links</td></tr>
+    </tbody>
+  </table></div>
+  <div class="grid2">
+    <div class="card soft item"><h3>VA pay tiers (paid by client, direct to VA)</h3><p>Entry $4–$6/hr · Experienced $6–$10/hr · Senior $10–$15+/hr. Most clients choose Experienced. Paid hourly or fixed retainer through Wise, PayPal, Payoneer or GCash.</p></div>
+    <div class="card soft item"><h3>Upgrade signals go to Sales</h3><p>“Can a VA run this after day 30?”, “two hours isn't enough”, frequent 20-hour blocks, a full VA asked to take more, more leads than they can call. Say “Let me set up time with [sales rep]” and log it.</p></div>
+  </div>
+</section>
+
+<!-- LIFECYCLE -->
+<section id="lifecycle">
+  <div><div class="eyebrow">Process</div><h2>Client lifecycle, Sales handoff to takeover</h2></div>
+  <p class="intro">Steps 1–8 are the same for every plan. After the client approves the documents, the path splits: VA plans go to Recruitment and handover; Launchpad runs Sprint and Milestone cycles. Total to approved documents: about 5–7 business days.</p>
+  <div class="steps item">
+    <div class="step"><div class="n">1</div><div><h4>Sales → OA handoff</h4><p>Jye · Day 0. Lead in Levrly OS with journey stage updated, contract signed <em>and paid</em>, handoff notes (Blueprint Prep Brief), onboarding call booked 2–3 days out.</p><div class="done"><b>Done when</b> Ann/Haze reply “Accepted”, or list what's missing, within 1 business day.</div></div></div>
+    <div class="step"><div class="n">2</div><div><h4>Account setup</h4><p>Ann/Haze · Day 0–1. OS profile, client folder, Ops Arch Active Clients tracker row, GHL sub-account, Jared James Academy for agents, OA section + deliverables. VA plans: Wise via referral link, OS access and courses, coaching calls. Launchpad: hours log opened at 20.0, addendum filed, Sprint/Milestone links sent.</p><div class="done"><b>Done when</b> the setup checklist is ticked in OS.</div></div></div>
+    <div class="step"><div class="n">3</div><div><h4>Call booked + prep</h4><p>Ann/Haze. Confirm the booking (or email the calendar link the same day), collect intake form and access list, run the access audit, prep the plan deck, confirm OS and GHL invites sent.</p><div class="done"><b>Done when</b> the call is booked 2–3 days after signing and intake/access are in.</div></div></div>
+    <div class="step"><div class="n">4</div><div><h4>Onboarding &amp; Blueprint call</h4><p>Ann, Haze or the Specialist. Recording on before the call starts. Part 1: plan deck, define the VA role by daily tasks, tier, pay method, channel, log the client into OS and GHL live. Part 2: red dot → blue dot.</p><div class="done"><b>Done when</b> client is logged in, has confirmed the ranked bottlenecks and the one goal, and has committed.</div></div></div>
+    <div class="step"><div class="n">5</div><div><h4>Blueprint report</h4><p>Call owner → Ann. Red dot findings and ranked bottlenecks, blue dot goal, requirements, recording link. Ann reviews the same day it arrives.</p><div class="done"><b>Done when</b> Ann approves (or returns a numbered gap list) within 1 business day of the call.</div></div></div>
+    <div class="step"><div class="n">6</div><div><h4>Plan email campaign</h4><p>Ann/Haze. Activate the Foundation/Build/Scale/Launchpad campaign and check the first email sends.</p><div class="done"><b>Done when</b> live the same day as the call.</div></div></div>
+    <div class="step"><div class="n">7</div><div><h4>Client documents</h4><p>Ann. Built with the “How to Create a Client Roadmap, 30/60/90 and JD” guide. Changes requested are revised before any build or recruitment starts.</p><div class="done"><b>Done when</b> the client approves. Sent 2–3 days after the call (scripts promise 48 hours).</div></div></div>
+    <div class="step"><div class="n">8</div><div><h4>Internal framework + delegation</h4><p>Ann → task owners. Break the roadmap into tasks, owners, hours and due dates (Scale 8 h · Launchpad 20 h). Each deliverable: SOP Master Template, tested in the client's real system, walkthrough video, 3–5 business days.</p><div class="done"><b>Done when</b> every task has an owner, hours and a deadline.</div></div></div>
+  </div>
+  <div class="branch">
+    <div>
+      <div class="lane">Foundation · Build · Scale</div>
+      <div class="steps item">
+        <div class="step"><div class="n">9</div><div><h4>OA → Recruitment</h4><p>Ann/Haze → Kristine with the approved JD and client profile.</p><div class="done"><b>Done when</b> Kristine accepts within 1 business day.</div></div></div>
+        <div class="step"><div class="n">10</div><div><h4>Sourcing + alignment</h4><p>Kristine. 7–14 days sourcing; 3–5 finalists; alignment interview within 3 days of shortlist; client picks within 24 hours.</p><div class="done"><b>Done when</b> VA selected and handover booked.</div></div></div>
+        <div class="step"><div class="n">11</div><div><h4>Client/VA handover</h4><p>Ann or Haze run the 45-minute Handover Deck; book first bi-weekly client and VA calls. UNLOCK “Leverage” starts.</p><div class="done"><b>Done when</b> start date and first calls confirmed, before the VA starts.</div></div></div>
+        <div class="step"><div class="n">12</div><div><h4>Client takeover</h4><p>Ann &amp; Haze mark the client active in OS and the tracker; call cadence starts.</p><div class="done"><b>Done when</b> marked active within 1 business day.</div></div></div>
+      </div>
+    </div>
+    <div>
+      <div class="lane">Launchpad</div>
+      <div class="steps item">
+        <div class="step"><div class="n">9</div><div><h4>Task delegation</h4><p>Ann delegates each task with hours, deadline and deliverable, inside 20 h.</p><div class="done"><b>Done when</b> every task has an owner and hours.</div></div></div>
+        <div class="step"><div class="n">10</div><div><h4>Sprint &amp; Milestone cycles</h4><p>One project per week. Build, test, walkthrough, log every hour. Hours report at 50% and 75%; raise remaining hours at about 15 h used.</p><div class="done"><b>Done when</b> each milestone is signed off and the next call booked.</div></div></div>
+        <div class="step"><div class="n">11</div><div><h4>Optimize + final handoff (30 min)</h4><p>KPIs, feedback fixes, handover package. Walk through it, confirm owners, agree next step, get sign-off, close in OS. At 20.0 hours work stops.</p><div class="done"><b>Done when</b> the client signs off.</div></div></div>
+        <div class="step"><div class="n">12</div><div><h4>Exit to Sales or Recruitment</h4><p>Build/Scale upgrade → Jye. VA placement → Kristine (joins step 9 on the left).</p><div class="done"><b>Done when</b> receiver accepts within 1 business day.</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card item"><h3>What the client gives us</h3><ul class="tight"><li>Intake form and access list before the call</li><li>One decision-maker who approves roadmap and priorities</li><li>Agreement and commitment at the Blueprint call</li><li>Replies within 2 business days (text, email or call)</li></ul></div>
+    <div class="card item"><h3>Quality check before any deliverable ships</h3><ul class="tight"><li>SOP Master Template, Levrly branding and official logo</li><li>Names trigger, owner, tools, steps, output, end point</li><li>Tested once in the client's real system</li><li>Walkthrough video recorded and linked</li><li>Filed in client folder, ticked in OS, hours logged</li></ul></div>
+  </div>
+</section>
+
+<!-- OPTIMIZE -->
+<section id="optimize">
+  <div><div class="eyebrow">Method · client side</div><h2>The OPTIMIZE method</h2></div>
+  <p class="intro">How the OA team transforms the client's business: four stages, eight moves. Target outcome: <span class="quote">the business is systemized, measurable and ready to delegate.</span> The OA team is not VA labor and does not manage the client's business.</p>
+  <div class="acro item">
+    <div class="card soft"><div class="letter">O</div><h4>Observe · Diagnose</h4><p>Map workflows, tools, people: trigger, steps, owner, decisions, end point. → Current-state process map</p></div>
+    <div class="card soft"><div class="letter">P</div><h4>Pinpoint · Diagnose</h4><p>Name bottlenecks, gaps, risks out loud, ranked by time/money. Client confirms. → Ranked bottleneck list</p></div>
+    <div class="card soft"><div class="letter">T</div><h4>Transform · Architect</h4><p>Redesign; map ownership, handoffs, decision rights. → Roadmap + internal build plan</p></div>
+    <div class="card soft"><div class="letter">I</div><h4>Implement · Implement</h4><p>Build SOPs, automations, dashboards, templates in the client's tools. → Live systems + walkthroughs</p></div>
+    <div class="card soft"><div class="letter">M</div><h4>Measure · Optimize</h4><p>KPIs, reporting, accountability. → KPI baseline and scorecard</p></div>
+    <div class="card soft"><div class="letter">I</div><h4>Integrate · Implement</h4><p>Connect people, tools and communication. → Working hand-offs</p></div>
+    <div class="card soft"><div class="letter">Z</div><h4>Zero In · Optimize</h4><p>Refine highest-impact areas from use and feedback. → Refined systems</p></div>
+    <div class="card soft"><div class="letter">E</div><h4>Expand · Optimize</h4><p>Prepare delegation, hiring, growth. → Delegation strategy + VA readiness</p></div>
+  </div>
+  <div class="tbl item"><table>
+    <thead><tr><th>Week</th><th>Stage</th><th>OA work</th><th>Signed off at Milestone Review</th></tr></thead>
+    <tbody>
+      <tr><td class="num k">1</td><td>Diagnose (~3 h)</td><td>Onboarding, access audit, Blueprint call, workflow maps, Blueprint report</td><td>Bottleneck list</td></tr>
+      <tr><td class="num k">2</td><td>Architect (~4 h)</td><td>Roadmap and build plan; first build started</td><td>Roadmap and build priorities</td></tr>
+      <tr><td class="num k">3</td><td>Implement (~10 h)</td><td>Top builds, tests, walkthroughs; hours report at 50%</td><td>Each deliverable shipped that week</td></tr>
+      <tr><td class="num k">4</td><td>Optimize (~3 h)</td><td>Feedback fixes, KPIs, delegation strategy, VA readiness; hours report at 75%</td><td>Handover package and next step</td></tr>
+    </tbody>
+  </table></div>
+  <div class="grid2">
+    <div class="card item"><h3>Hours rules (Launchpad)</h3><ul class="tight"><li>20 h logged in quarter-hours against a deliverable in OS; meetings, building and documentation count</li><li>Lead Architect's internal reviews don't count</li><li>Scope changes written into the build plan before work starts</li><li>Anything that would run over: stop and get Ann's decision</li><li>At 20.0 hours work stops; leftovers go in the handoff recommendation</li></ul></div>
+    <div class="card item"><h3>Handover package</h3><ul class="tight"><li>Improvement report (before/after, bottlenecks fixed, hours by deliverable)</li><li>Updated roadmap (built, open, next 90 days)</li><li>Every system built, with walkthrough and location</li><li>KPIs and scorecard</li><li>Delegation strategy, VA readiness, ownership list</li><li>Access log</li></ul></div>
+    <div class="card item"><h3>Four plan focuses</h3><ul class="tight"><li><b>Marketing &amp; Brand Ops</b>: brand stays active without owner approving every post</li><li><b>Sales &amp; Lead Mgmt Ops</b>: no lead goes cold</li><li><b>Executive &amp; Business Ops</b>: admin leaves the owner's calendar</li><li><b>Team Growth &amp; Recruitment Ops</b>: hiring runs to a standard</li></ul></div>
+  </div>
+</section>
+
+<!-- UNLOCK -->
+<section id="unlock">
+  <div><div class="eyebrow">Method · VA side</div><h2>The UNLOCK VA method</h2></div>
+  <p class="intro">Target outcome: <span class="quote">every placed VA shows up, stays consistent and acts without being told.</span> U and N happen before the VA starts, L at handover, and O, C and K for as long as the VA is placed.</p>
+  <div class="acro item">
+    <div class="card soft"><div class="letter">U</div><h4>Understand</h4><p>Haze · after JD approval. Read Blueprint report, roadmap, JD; client's top 3 priorities, style, pet peeves; role summary.</p></div>
+    <div class="card soft"><div class="letter">N</div><h4>Nail the Outcome</h4><p>Ann · before start. One countable 90-day outcome + Working Structure (hours, time zone, pay via Wise, leave, 3–5 KPIs, channel, reply window). Confirmed with client in writing.</p></div>
+    <div class="card soft"><div class="letter">L</div><h4>Leverage</h4><p>Ann &amp; Haze · Days 1–5. Handover Deck, access via password manager, OS courses (Real Estate + GHL first), first 3 SOPs, management tracker, Apploye working.</p></div>
+    <div class="card soft"><div class="letter">O</div><h4>Own</h4><p>Haze · daily Days 1–30, then weekly. Check the Daily Show-Up Standard, message misses same day, scorecard every Friday.</p></div>
+    <div class="card soft"><div class="letter">C</div><h4>Coach</h4><p>Ann &amp; Haze · Weeks 2, 4, 6, 8. Four 30-min sessions; recap to VA (client copied) within 24 h.</p></div>
+    <div class="card soft"><div class="letter">K</div><h4>Keep Improving</h4><p>Ann · Day 30, 60, 90, then quarterly. Day 90/quarterly reviews are 45 min, client joins last 15. Improvement plan saved in OS.</p></div>
+  </div>
+  <div class="grid2">
+    <div class="card item"><h3>Daily Show-Up Standard</h3><ul class="tight"><li>Log in on time via time tracker; greet client in chat</li><li>Post SOD report (priorities, blockers)</li><li>Agreed check-ins; reply within the window</li><li>Update management tracker as work moves</li><li>Post EOD report (done, pending, blockers, next)</li><li>Log out via time tracker</li><li>Attend every meeting or post one takeaway from the recording</li><li>Report absence, delay or leave in advance in OS, never after</li></ul></div>
+    <div class="card item"><h3>Weekly VA scorecard (Fridays, in OS)</h3><ul class="tight"><li>On-time logins (time tracker)</li><li>SOD and EOD posted</li><li>Meetings and coaching attended</li><li>Tasks closed by deadline</li><li>Issues or ideas raised by the VA first</li><li>Times the client chased the VA (target: zero)</li></ul></div>
+  </div>
+  <div class="tbl item"><table>
+    <thead><tr><th>Session</th><th>Week</th><th>Focus</th><th>Leave with</th></tr></thead>
+    <tbody>
+      <tr><td class="k num">1</td><td class="num">2</td><td>Outcome check, SOD/EOD routine, tool questions</td><td>VA can repeat the 90-day outcome; access gaps closed</td></tr>
+      <tr><td class="k num">2</td><td class="num">4</td><td>Which SOPs and tools are used daily; where time is lost</td><td>One SOP to write or improve</td></tr>
+      <tr><td class="k num">3</td><td class="num">6</td><td>What the VA did unasked; deadlines; escalation</td><td>Two tasks the VA fully owns</td></tr>
+      <tr><td class="k num">4</td><td class="num">8</td><td>Client joins; 60-day review</td><td>Next-30-day priorities</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- RED DOT -->
+<section id="reddot">
+  <div><div class="eyebrow">Method · on every Blueprint call</div><h2>Red dot → blue dot</h2></div>
+  <div class="grid2">
+    <div class="card item"><h3>Red dot: where the business is today</h3><p><b>Ask:</b> “Walk me through the last time you ___, start to finish. What did you do first?” Then: where it slowed down, what only the client knows, where it's written down, what access the VA needs.</p><p>Be the therapist, not the fixer. Done when the client says “that's right” to your recap.</p></div>
+    <div class="card item"><h3>Blue dot: where they want to be</h3><p><b>VA plans:</b> “What do you need your VA to have achieved 90 days from now?” Take day 30, 60, 90 one at a time. <b>Launchpad:</b> “In 30 days, what is one thing that should be working that isn't today?”</p><p>Write it as <b>from [A] to [B] by [date]</b>, with today's number and the target filled in live.</p></div>
+  </div>
+  <div class="callout item"><b>Three rules.</b> Red dot before blue dot (“Hold that thought, I'm writing it down”). One blue dot: three goals means zero goals. Both dots get a number: “What number would we check on Friday?” Bring vague answers back: “Last Tuesday, what actually happened?”</div>
+</section>
+
+<!-- MEETINGS -->
+<section id="meetings">
+  <div><div class="eyebrow">Process</div><h2>Meetings &amp; cadence</h2></div>
+  <p class="intro">Client and consultation calls go between 10:30 AM and 4:00 PM; no 9:00 AM calls unless urgent and approved. Every call ends with the next call booked and a report from whoever ran it. Send one updated invite, never duplicates.</p>
+  <div class="tbl item"><table>
+    <thead><tr><th>Meeting</th><th>Who</th><th>When</th><th>Length</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Onboarding &amp; Blueprint call</td><td>Ann, Haze or Specialist</td><td>2–3 days after signing</td><td>—</td><td>Plan walkthrough, OS/GHL login, red dot → blue dot, commitment</td></tr>
+      <tr><td class="k">OA Team Sprint Meeting (internal)</td><td>Ann facilitates, all OAs</td><td>Weekly</td><td>15–30 min</td><td>Priorities, owners, client and placed-VA review, coverage, risks</td></tr>
+      <tr><td class="k">Client Sprint call</td><td>Assigned OA</td><td>Weekly, Mon or Tue</td><td>15–20 min</td><td>What we finished, the number, what's next</td></tr>
+      <tr><td class="k">Milestone Review / Meeting</td><td>OA, Ann as needed</td><td>Thu or Fri, 11 AM–3 PM (or per project)</td><td>10–15 min</td><td>Show deliverables, client action items, sign-off, next milestone</td></tr>
+      <tr><td class="k">Client/VA handover</td><td>Ann or Haze</td><td>Before VA starts</td><td>45 min</td><td>Handover Deck; expectations; OS use; book first calls</td></tr>
+      <tr><td class="k">Client consultation call</td><td>Ann (Haze covers)</td><td>Bi-weekly to day 90</td><td>—</td><td>Client progress</td></tr>
+      <tr><td class="k">VA consult / coaching</td><td>Haze (Ann covers)</td><td>Bi-weekly; UNLOCK weeks 2, 4, 6, 8</td><td>30 min</td><td>VA coaching; recap in 24 h</td></tr>
+      <tr><td class="k">Build monthly Architect session</td><td>OA</td><td>Monthly</td><td>2 h (1 client, 1 VA)</td><td>Win, scoreboard, red dot, build, hand to VA</td></tr>
+      <tr><td class="k">Scale weekly Architect hours</td><td>OA</td><td>Weekly</td><td>2 h (15 check-in, 90 build)</td><td>Report, Review, Commit, Reset; build this month's focus</td></tr>
+      <tr><td class="k">Monthly meeting</td><td>Ann and Haze</td><td>Monthly (after day 90)</td><td>—</td><td>Client, VA and OA team</td></tr>
+      <tr><td class="k">Day 30/60/90 + quarterly review</td><td>Ann</td><td>Per UNLOCK</td><td>45 min</td><td>Client joins last 15 min; improvement plan</td></tr>
+      <tr><td class="k">Launchpad final handoff</td><td>Ann or Haze</td><td>At 20.0 h or all priorities done</td><td>30 min</td><td>Package, owners, next step, sign-off</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- SOPS -->
+<section id="sops">
+  <div><div class="eyebrow">Library</div><h2>SOPs</h2></div>
+  <p class="intro">Open any SOP for its steps. Each one names a trigger, an owner and a deadline.</p>
+
+  <details class="sop item"><summary><div class="row"><h3>Reviewing Sales Handoff Notes</h3></div><div class="meta"><span class="chip g">Ann (Haze covers)</span><span class="chip">Trigger: handoff email, Day 0</span><span class="chip">Accept or flag in 1 business day</span></div><p>Catch gaps before the Blueprint call so the client never repeats themselves.</p></summary>
+    <div class="body">
+      <h5>Steps</h5>
+      <ol class="tight">
+        <li><b>Open the package</b> (same day): handoff email with notes, signed contract, plan confirmed, call booked 2–3 days out, lead in OS with journey stage. Missing item → flag Sales right away.</li>
+        <li><b>Check notes against the 8-section Blueprint Prep Brief</b>: short version, how we got here, people, company, red/blue dots, placements, what Sales told the client, the session. 2+ sections missing → return to Sales.</li>
+        <li><b>Verify facts and commitments</b>: every number traces to a call, email or proposal; terms match standard; unknowns labeled “Not defined yet”; every attendee has an email. Commitment Levrly can't honor → Sales and Justin before the call.</li>
+        <li><b>Accept or flag</b>: reply “Accepted” or a numbered gap list, never both. Add open questions to call prep.</li>
+        <li><b>File and start setup</b> (Day 0–1): notes and contract in OS, update OA section, start account setup.</li>
+      </ol>
+      <h5>Rules</h5><p>Don't fill gaps yourself; send them back to Sales. Honor Sales' commitments; resolve unworkable ones with Sales and Justin before the client hears otherwise. Gaps unresolved at 2 business days → Justin.</p>
+    </div></details>
+
+  <details class="sop item"><summary><div class="row"><h3>Client Onboarding &amp; Blueprint Process</h3></div><div class="meta"><span class="chip g">Jye, Ann, Haze, Specialist</span><span class="chip">Trigger: client signs</span><span class="chip">5–7 business days</span></div><p>Signed client to approved Roadmap, 30/60/90 and JD, then delegation. Steps 1–8 of the lifecycle above.</p></summary>
+    <div class="body">
+      <h5>Call Part 1 · plan deck slides</h5>
+      <ul class="tight">
+        <li>Slide 2: announce the working session (“Then we stop presenting and start working.”)</li>
+        <li>Slides 4–5: daily tasks, not a title; tools (CRM, task tool, comms)</li>
+        <li>Slide 6: VA tier · Slides 7–9: top 3–5 candidates, client decides within 24 h of alignment</li>
+        <li>Slide 10: pay method · Slides 11–13: VA channel, OA reviews, coaching library</li>
+        <li>Slides 14–16: client logs in to OS and GHL on their own device. Don't move on until they see the dashboard.</li>
+      </ul>
+      <h5>Call Part 2</h5><p>Red dot → blue dot (see method above). No commitment → Ann joins the follow-up.</p>
+      <h5>Rules</h5><p>Record every call. Never quote upgrade or add-on prices. Every handoff is an email. Internal chats stay in department chat spaces.</p>
+    </div></details>
+
+  <details class="sop item"><summary><div class="row"><h3>Reviewing Onboarding &amp; Blueprint Calls</h3></div><div class="meta"><span class="chip g">Ann</span><span class="chip">Trigger: Blueprint report received</span><span class="chip">Decide same day</span></div><p>Approve the report or return a numbered gap list, so the documents can be built without guessing.</p></summary>
+    <div class="body">
+      <h5>Checks</h5>
+      <ol class="tight">
+        <li><b>Arrived</b>: report, recording link, plan campaign live.</li>
+        <li><b>Onboarding part</b>: tasks not titles, tools, tier, pay method, channel, client logged in, no prices quoted.</li>
+        <li><b>Red dot</b>: one real recent workflow mapped end to end, bottlenecks ranked by cost, client's words, client confirmed.</li>
+        <li><b>Blue dot</b>: one goal “from A to B by date” with both numbers; client committed.</li>
+        <li><b>Cross-check handoff notes</b>: open questions answered; no conflict with what Sales promised (raise with Sales before docs go out).</li>
+        <li><b>Approve or return</b>: mark reviewed in OS and start documents, or send numbered gaps tied to failed checks with an update-by date. Note coaching points.</li>
+      </ol>
+      <h5>Rules</h5><p>One answer per review. Don't fill gaps unless you can confirm them from the recording. Coach, don't just correct. Reviewed every 3 months.</p>
+    </div></details>
+
+  <details class="sop item"><summary><div class="row"><h3>Milestone Meetings (client-facing)</h3></div><div class="meta"><span class="chip g">Operations Architect</span><span class="chip">Weekly, Thu/Fri</span><span class="chip">10–15 min</span></div><p>Keep the client informed, surface blockers, keep the project on the roadmap.</p></summary>
+    <div class="body">
+      <h5>Agenda</h5>
+      <ol class="tight"><li>Welcome and purpose (1 min)</li><li>Last week's accomplishments, with where each lives in OS (3–4 min)</li><li>This week's priorities and delivery-map phase (3–4 min)</li><li>Client action items: access via password manager, assets, approvals (2 min)</li><li>Upcoming milestones and scoreboard (1–2 min)</li><li>Questions, confirm next meeting (1 min)</li></ol>
+      <h5>After, same day</h5><p>Update Milestone Tracker and Project Scoreboard, upload deliverables to the OA section, Gemini notes, follow up in the client's channel, Google Chat tasks, weekly report, book next meeting. Missing access → follow up daily by email and text.</p>
+      <h5>Escalate to Ann</h5><p>Missed meetings, dissatisfaction, out-of-scope or contract/billing asks, delays over 1 week, access still missing, capacity or cross-department needs.</p>
+    </div></details>
+
+  <details class="sop item"><summary><div class="row"><h3>OA Team Sprint Meeting (internal)</h3></div><div class="meta"><span class="chip g">Ann facilitates</span><span class="chip">Weekly</span><span class="chip">15–30 min</span></div><p>Align on priorities, workloads, client deliverables and placed-VA performance.</p></summary>
+    <div class="body">
+      <h5>Agenda</h5>
+      <ol class="tight"><li>Welcome and announcements (2–3 min)</li><li>Team status: end-of-week goals with completion % (5 min)</li><li>Active client review: phase, deadlines, approvals, access, risks; weekly goal per client (8–10 min)</li><li>Placed VA check: scorecards, misses, 2nd/3rd miss flags (3–5 min)</li><li>New clients, onboardings, handovers; who schedules each (3–5 min)</li><li>Sprint planning: owner, priority, due date per task; what's deprioritized (8–10 min)</li><li>Schedule and coverage (2–3 min)</li><li>Risks, blockers, dependencies (3–5 min)</li><li>Wrap-up (1–2 min)</li></ol>
+      <h5>Rules</h5><p>Client conversations go in each client's Google Chat space. Branded reports follow the Levrly brand guide. Document decisions before closing.</p>
+    </div></details>
+
+  <details class="sop item"><summary><div class="row"><h3>OA Pre-Handover Checklist &amp; Client Questions</h3></div><div class="meta"><span class="chip g">Operations Architect</span><span class="chip">Before any design</span></div><p>Verify the inherited record before designing, so the right thing is built the first time.</p></summary>
+    <div class="body">
+      <h5>Checklist A–H</h5>
+      <ul class="tight"><li><b>A</b> OA service in scope, plan, term, payment confirmed</li><li><b>B</b> Problem statement with reasons, not service names</li><li><b>C</b> Outcomes trace to pain points and are measurable</li><li><b>D</b> Systems inventory: current system, use, known issue, VA access</li><li><b>E</b> Role boundary confirmed; nothing built around a TBD role</li><li><b>F</b> Approval authority mapped</li><li><b>G</b> Sales promises and exceptions reviewed and escalated</li><li><b>H</b> Readiness gate: status Complete, nothing Blocked</li></ul>
+      <h5>Three call stages</h5><p>Blueprint/Architecture call · Systems &amp; Tools Audit (screen-shared, platform by platform) · Solution Design Sign-Off (explicit approval, nothing verbal-only).</p>
+      <h5>Do not</h5><p>Design while a Blocked condition is open; turn an assumption into a requirement; agree to work outside the plan; absorb a scope conflict instead of escalating.</p>
+    </div></details>
+
+  <details class="sop item"><summary><div class="row"><h3>Levrly Sales Call Guide</h3></div><div class="meta"><span class="chip g">Sales</span><span class="chip">Discovery ~45 min + follow-up</span></div><p>What Sales must capture so the OA can build the Blueprint Prep Brief.</p></summary>
+    <div class="body">
+      <h5>Discovery stages</h5><p>Open 3 min · Business 8 · Team 8 · Pain 10 · Role 10 · Close 6. Recommend the role in stage 6, not before.</p>
+      <h5>Must-asks</h5><p>Who decides and who joins the blueprint; what the business does; sister companies; tools and frustrations; who's on the team and who the hire reports to; where it hurts; six-month picture in their words; day-one tasks; 30-day win; each attendee's email.</p>
+      <h5>After the call</h5><p>Same-day handoff; deposit paid before the blueprint session; blueprint invite comes from the OA; generate the Blueprint Prep Brief and send it to the OA as a PDF. Never promise anything outside standard terms without checking.</p>
+    </div></details>
+</section>
+
+<!-- SCRIPTS -->
+<section id="scripts">
+  <div><div class="eyebrow">Library</div><h2>Onboarding &amp; Blueprint call scripts</h2></div>
+  <p class="intro">Shared rules for every script: only Sales quotes the price; the client commits on the call; every call ends with a task and a date for both sides and the next call booked; say “our team”, not “I”; scope and upgrade signals go to Sales the same day.</p>
+  <div class="grid2">
+    <div class="card item"><h3>Foundation</h3><div class="meta"><span class="chip">28 slides</span><span class="chip">90-day goal</span></div><p>First VA hire. Point A → Point B, then the A-to-B checklist: every line gets one name (client, VA or us). “The one thing we can't build is you letting go.” Hand to Recruitment same day: tasks, tools, hours, tier, 90-day goal, concerns.</p></div>
+    <div class="card item"><h3>Build</h3><div class="meta"><span class="chip">28 slides</span><span class="chip">Monthly 2 h</span></div><p>One goal plus two weekly habits; the VA owns at least one. Monthly session: 5 min win · 10 scoreboard · 15 red dot · 75 build + SOP + walkthrough · 10 hand to VA · 5 next steps.</p></div>
+    <div class="card item"><h3>Scale</h3><div class="meta"><span class="chip">28 slides</span><span class="chip">Weekly 2 h</span></div><p>Two roles, one goal, two habits, each VA owns a habit. Weekly: 15 min check-in (Report, Review, Commit, Reset) · 90 build · 10 hand to VA · 5 next. Bigger reviews at 30/60/90, after quarterly planning, and month 9 (flag Year Two to Sales).</p></div>
+    <div class="card item"><h3>Launchpad</h3><div class="meta"><span class="chip">17 slides</span><span class="chip">30 days · 20 h</span></div><p>“For the next 30 days, our team carries the work.” Goal sentence drafted from Sales notes. Three client commitments: access this week, approval in week 2, 15 minutes a week. Raise hours at about 15 used: keep working with us, hire a VA, or finish it yourself.</p></div>
+  </div>
+  <div class="tbl item"><table>
+    <thead><tr><th>If the client says…</th><th>Say</th><th>Owner</th></tr></thead>
+    <tbody>
+      <tr><td>Starts suggesting fixes</td><td>“Hold that thought, I'm writing it down.”</td><td>OA</td></tr>
+      <tr><td>“Everything is broken.”</td><td>“Which one, if fixed, would make the rest easier?”</td><td>OA</td></tr>
+      <tr><td>“I don't know the number.”</td><td>“Best guess; we measure it in week 1.”</td><td>OA</td></tr>
+      <tr><td>“Don't want to give access”</td><td>“What worries you? Your VA sees only what they need.”</td><td>OA</td></tr>
+      <tr><td>Takes work back</td><td>“Was it the result, or how it was done?”</td><td>OA</td></tr>
+      <tr><td>Misses check-ins</td><td>“What would make these 15 minutes worth your time?”</td><td>OA</td></tr>
+      <tr><td>“Can you also build ___?” / VA is full</td><td>“Let me set up time with [sales rep].” Log the upgrade signal.</td><td>OA → Sales</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- HANDOFFS -->
+<section id="handoffs">
+  <div><div class="eyebrow">Control</div><h2>Handoff rules</h2></div>
+  <p class="intro"><b>Nothing moves forward with missing information.</b> These apply to every handoff in every department.</p>
+  <div class="steps item">
+    <div class="step"><div class="n">1</div><div><h4>Record</h4><p>Every lead and client is in Levrly OS or GHL.</p></div></div>
+    <div class="step"><div class="n">2</div><div><h4>Send</h4><p>Email the next owner: plan, what's done, what's open, links, next action.</p></div></div>
+    <div class="step"><div class="n">3</div><div><h4>Check</h4><p>Incomplete details → escalate right away. Don't start the next step with gaps.</p></div></div>
+    <div class="step"><div class="n">4</div><div><h4>Accept</h4><p>Receiver replies “Accepted” within 1 business day, or lists what's missing.</p></div></div>
+    <div class="step"><div class="n">5</div><div><h4>File</h4><p>Handoff docs in OS under the client profile; both owners update the Ops Arch Active Clients tracker the same day.</p></div></div>
+    <div class="step"><div class="n">6</div><div><h4>Communicate</h4><p>Internal chats stay in each department's chat space.</p></div></div>
+    <div class="step"><div class="n">7</div><div><h4>Escalate</h4><p>Not accepted in 1 business day → Ann. In 2 business days → Justin.</p></div></div>
+  </div>
+  <div class="tbl item"><table>
+    <thead><tr><th>Handoff</th><th>From → To</th><th>Must include</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Sales → OA</td><td>Jye → Ann/Haze</td><td>Handoff notes, signed contract, payment, plan, OS journey stage, onboarding call date</td></tr>
+      <tr><td class="k">Blueprint report</td><td>Call owner → Ann</td><td>Findings, requirements, confirmed bottlenecks, blue dot, recording link</td></tr>
+      <tr><td class="k">Client documents</td><td>Ann → client</td><td>30/60/90, Client Roadmap, JD</td></tr>
+      <tr><td class="k">Task delegation</td><td>Ann → task owner</td><td>Task, hours, deadline, deliverable</td></tr>
+      <tr><td class="k">OA → Recruitment</td><td>Ann/Haze → Kristine</td><td>Approved JD, client profile (Launchpad: VA readiness pack)</td></tr>
+      <tr><td class="k">Recruitment → OA</td><td>Kristine → Ann/Haze</td><td>Selected VA, confirmed rate, start date, handover booked</td></tr>
+      <tr><td class="k">Call report</td><td>Call owner → internal files</td><td>Notes, decisions, next call date, recording</td></tr>
+      <tr><td class="k">Launchpad exit</td><td>Ann/Haze → Jye or Kristine</td><td>Signed handover package, agreed next step</td></tr>
+    </tbody>
+  </table></div>
+  <div class="card soft item"><h3>Where records live</h3><p><b>Client's Levrly OS profile:</b> handoff docs, intake and Discovery notes, Blueprint report, roadmap, 30/60/90, JD, build plan, hours log, deliverables, handover package, sign-off. <b>VA's OS profile:</b> UNLOCK notes, scorecards, reviews. <b>OA internal files:</b> recordings and call reports. <b>Client folder → Access &amp; Accounts:</b> access log. <b>Master contracts backup folder</b> in Drive (added after ESC-0024).</p></div>
+</section>
+
+<!-- ESCALATION PLAYBOOK -->
+<section id="escalation">
+  <div><div class="eyebrow">Control · Escalation Tracker</div><h2>Escalation playbook</h2></div>
+  <p class="intro">Log each client or operational issue once in the Levrly Escalation Tracker, with a recommendation, one owner and a current next step. Never enter passwords or confidential personal data in the tracker.</p>
+  <div class="callout item"><b>Process:</b> Identify → Classify priority → Assess impact → Attempt safe resolution → Escalate / approve → Own next step → Communicate → Close. Mark <b>Resolved</b> when fixed; <b>Closed</b> only after confirmation and final documentation.</div>
+  <div class="tbl item"><table>
+    <thead><tr><th>Level</th><th>Trigger</th><th>Handling</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pri P1">P1 · Critical</span></td><td>Severe outage, security incident, major client or revenue exposure</td><td>Escalate immediately by direct communication; contain first</td><td>Multiple VAs can't access the system</td></tr>
+      <tr><td><span class="pri P2">P2 · High</span></td><td>Material client disruption or significant deadline risk</td><td>Same-day management attention</td><td>Placement blocked before a client launch</td></tr>
+      <tr><td><span class="pri P3">P3 · Medium</span></td><td>Limited disruption; workaround possible</td><td>Routine tracked escalation</td><td>Client workflow needs correction</td></tr>
+      <tr><td><span class="pri P4">P4 · Low</span></td><td>Minor improvement or low-impact request</td><td>Scheduled review</td><td>Small dashboard improvement</td></tr>
+    </tbody>
+  </table></div>
+  <p class="intro" style="font-size:13px">Priority response times are a proposed internal standard until Levrly leadership approves them.</p>
+  <div class="grid2">
+    <div class="card item"><h3>Who decides</h3><ul class="tight"><li><b>Team member</b>: reports, documents impact, safe troubleshooting</li><li><b>Department lead</b>: checks severity, resolves within authority, recommends</li><li><b>Operations manager</b>: coordinates, assigns owner and deadline</li><li><b>Leadership</b>: pricing, contracts, policy, refunds, material exceptions</li><li><b>Assigned owner</b>: implements, updates client, records resolution</li></ul></div>
+    <div class="card item"><h3>Leadership rhythm</h3><ol class="tight"><li><b>Prioritize</b> P1/P2 first</li><li><b>Decide</b>: every approval request carries a proposed resolution and the decision needed</li><li><b>Assign</b>: one owner, a next action, a target date</li><li><b>Communicate</b>: set the next client update date</li><li><b>Close</b>: Resolved, then Closed after confirmation</li></ol></div>
+  </div>
+  <div class="sub">
+    <h3>OA process escalations</h3>
+    <div class="tbl item"><table>
+      <thead><tr><th>Trigger</th><th>Action</th><th>Escalate to</th><th>Within</th></tr></thead>
+      <tbody>
+        <tr><td>Handoff notes incomplete</td><td>Flag to sender</td><td>OA Manager, Sales or Recruitment</td><td>Right away</td></tr>
+        <tr><td>Handoff not accepted</td><td>Chase receiver</td><td>Ann → Justin</td><td>1 → 2 business days</td></tr>
+        <tr><td>Commitment Levrly can't honor</td><td>Raise it</td><td>Sales and Justin</td><td>Before the call</td></tr>
+        <tr><td>Onboarding call not booked</td><td>Email calendar link</td><td>OA team</td><td>Same day</td></tr>
+        <tr><td>Setup item blocked</td><td>Flag it</td><td>Ann</td><td>Same day</td></tr>
+        <tr><td>Blueprint report late</td><td>Chase call owner</td><td>Ann</td><td>1 business day</td></tr>
+        <tr><td>Client won't commit</td><td>Ann joins follow-up</td><td>Ann</td><td>Follow-up call</td></tr>
+        <tr><td>Client not replying</td><td>Follow up with decision-maker</td><td>Ann</td><td>2 business days</td></tr>
+        <tr><td>Task or feedback will exceed hours</td><td>Stop and decide scope</td><td>Ann</td><td>Before more hours are logged</td></tr>
+        <tr><td>Project delayed over 1 week / access missing after daily follow-ups</td><td>Document and raise</td><td>Ann</td><td>At the next Sprint meeting</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="sub">
+    <h3>Placed VA escalation ladder (UNLOCK)</h3>
+    <div class="tbl item"><table>
+      <thead><tr><th>Trigger</th><th>Action</th><th>Owner</th><th>Within</th></tr></thead>
+      <tbody>
+        <tr><td>1st missed SOD, EOD, login or meeting</td><td>DM the VA; note in OS</td><td>Haze</td><td>Same day</td></tr>
+        <tr><td>2nd miss within two weeks</td><td>Call with the VA; written expectations</td><td>Haze</td><td>1 business day</td></tr>
+        <tr><td>3rd miss or a client complaint</td><td>Inform client and Recruitment; start improvement plan; log in Escalation Tracker</td><td>Ann, Kristine</td><td>Same day</td></tr>
+        <tr><td>No improvement after two weeks</td><td>Replacement discussion under the replacement guarantee</td><td>Ann, Kristine</td><td>1 business day</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- CASE LOG -->
+<section id="cases">
+  <div><div class="eyebrow">Control · Escalation Tracker</div><h2>Escalation case log</h2></div>
+  <p class="intro">All 33 cases from the Escalation Tracker, as of November 21, 2026. Two are In Progress. Eleven more are marked Resolved but still list an open next step, and nine of those have no resolved date. In the tracker, either close them out or reopen them.</p>
+  <div class="card soft item" id="attention"></div>
+  <div class="filters">
+    <label for="fStatus" class="hide">Status</label>
+    <select id="fStatus"><option value="">All statuses</option><option value="open">Needs attention</option><option value="In Progress">In Progress</option><option value="Resolved">Resolved</option></select>
+    <label for="fDept" class="hide">Department</label>
+    <select id="fDept"><option value="">All departments</option><option>Client Success</option><option>Recruitment</option><option>Sales</option><option>Operations</option><option>Marketing</option></select>
+    <label for="fPri" class="hide">Priority</label>
+    <select id="fPri"><option value="">All priorities</option><option>P2</option><option>P3</option><option>P4</option></select>
+    <label for="fCat" class="hide">Category</label>
+    <select id="fCat"><option value="">All categories</option><option>Contract / Policy</option><option>Billing</option><option>VA Performance</option><option>Recruitment</option><option>CRM / Systems</option><option>Client Support</option></select>
+    <span class="count" id="caseCount"></span>
+  </div>
+  <div class="tbl"><table class="cases">
+    <thead><tr><th>ID</th><th>Reported</th><th>Priority</th><th>Status</th><th>Dept · Category</th><th>Client</th><th>Issue</th><th>Outcome / next step</th><th>Owner</th></tr></thead>
+    <tbody id="caseRows"></tbody>
+  </table></div>
+</section>
+
+<!-- POLICIES -->
+<section id="policies">
+  <div><div class="eyebrow">Control · decided by leadership</div><h2>Policies from escalations</h2></div>
+  <p class="intro">Rules leadership set while resolving tracker cases. Most are not yet in a written SOP. The case IDs link each rule to its source.</p>
+  <div class="grid2">
+    <div class="card item"><h3>Signed and paid before handoff</h3><p>No client moves to Onboarding or Recruitment without a signed contract and first payment. Tara is automating sign-before-pay. Referral clients (e.g. via Rusty) meet the OA team and onboard before sourcing; ESC-0032 was the last exception.</p><div class="meta"><span class="chip">ESC-0001</span><span class="chip">0006</span><span class="chip">0012</span><span class="chip">0027</span><span class="chip">0032</span></div></div>
+    <div class="card item"><h3>All VA contracts are 12 months</h3><p>Month-to-month is an exception, not policy. Sales doesn't pitch custom plans outside the catalog. Any price override is documented in the contract notes. Ann logs each sales error for training.</p><div class="meta"><span class="chip">ESC-0028</span></div></div>
+    <div class="card item"><h3>Levrly doesn't guarantee VA performance</h3><p>Levrly recruits and trains. Don't move payment dates because a VA started late, and don't make it a habit.</p><div class="meta"><span class="chip">ESC-0002</span></div></div>
+    <div class="card item"><h3>VA terms are between client and VA</h3><p>Holiday, leave or similar addenda are agreements between the client and the VA. Levrly can negotiate but can't make claims for a VA it doesn't employ.</p><div class="meta"><span class="chip">ESC-0003</span></div></div>
+    <div class="card item"><h3>Stripe billing setup</h3><p>Ongoing plans are monthly subscriptions, not one-time payments. Product names use capital-L “Levrly”; no duplicates. 2-day invoice due buffer. Watch for double charges the month after a refund.</p><div class="meta"><span class="chip">ESC-0005</span><span class="chip">0017</span><span class="chip">0022</span><span class="chip">0029</span></div></div>
+    <div class="card item"><h3>Back up every contract</h3><p>All client and VA contracts are saved in the master backup folder in Google Drive, not only in Levrly OS.</p><div class="meta"><span class="chip">ESC-0024</span></div></div>
+    <div class="card item"><h3>Rates and budgets before alignment</h3><p>Recruitment flags candidates above the client's budget before alignment calls, and sets rate expectations with the client early for specialist roles.</p><div class="meta"><span class="chip">ESC-0018</span><span class="chip">0022</span><span class="chip">0031</span></div></div>
+    <div class="card item"><h3>Clients outside the GHL agency</h3><p>Clients who keep their own GHL account are supported through guidance and GHL email support; a transfer isn't required.</p><div class="meta"><span class="chip">ESC-0015</span></div></div>
+    <div class="card item"><h3>VA performance: coach first, then evaluate</h3><p>Client VAs get a training or transition plan first (TC, GHL, compliance coaching). Internal team VAs go on a 2-week evaluation, then offboarding: notice, email suspended, GHL/OS access removed.</p><div class="meta"><span class="chip">ESC-0013</span><span class="chip">0016</span><span class="chip">0019</span><span class="chip">0026</span></div></div>
+    <div class="card item"><h3>Rejected candidates can reapply</h3><p>Send repeatedly rejected but engaged candidates to courses and coaching so they can reapply.</p><div class="meta"><span class="chip">ESC-0020</span></div></div>
+    <div class="card item"><h3>Automation on social platforms</h3><p>Keep human review on AI content and remove bots. Ann proposed quarterly research meetings on Meta platform rules.</p><div class="meta"><span class="chip">ESC-0033</span></div></div>
+    <div class="card item"><h3>Still to write</h3><p><b>Placement withdrawal and cancellation policy</b> (notice clause, fee or loss of credit; Joel: start with a conversation). <b>OA timeline language</b> in proposals: 20 hours in 4 phases, not 90 days. Confirm with Justin.</p><div class="meta"><span class="chip">ESC-0007</span><span class="chip">0010</span><span class="chip">0012</span></div></div>
+  </div>
+</section>
+
+<!-- GAPS -->
+<section id="gaps">
+  <div><div class="eyebrow">Control · needs a decision</div><h2>Conflicts to resolve</h2></div>
+  <p class="intro">The source documents disagree on these points. This hub shows the SOP version where it had to pick one. Decide each, then update the losing document.</p>
+  <div class="tbl item"><table>
+    <thead><tr><th>Topic</th><th>One version</th><th>Other version</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Launchpad 20-hour split</td><td>Diagnose 3 · Architect 4 · Implement 10 · Optimize 3 (Internal Team Process, OPTIMIZE)</td><td>1–1.5 · 6 · 6 · 6, which totals 19–19.5 h (Launchpad Process)</td></tr>
+      <tr><td class="k">Client documents deadline</td><td>2–3 days after the call (SOPs)</td><td>Within 48 hours (all four scripts)</td></tr>
+      <tr><td class="k">Blueprint report deadline</td><td>Within 1 business day (SOPs)</td><td>Same day (Launchpad script)</td></tr>
+      <tr><td class="k">Launchpad documents</td><td>30/60/90, Roadmap, JD (SOPs)</td><td>Roadmap, 30-Day Project Plan, Project Scoreboard (script)</td></tr>
+      <tr><td class="k">When Recruitment starts</td><td>After the client approves the documents (Onboarding SOP)</td><td>Same day as the call, “sources this week” (scripts)</td></tr>
+      <tr><td class="k">Blueprint call timing</td><td>2–3 days after signing</td><td>At least 2 days after signing (Foundation/Build/Scale scripts)</td></tr>
+      <tr><td class="k">Who writes the Blueprint report</td><td>The call owner (SOPs)</td><td>Haze → Ann; Ann runs the call (OPTIMIZE)</td></tr>
+      <tr><td class="k">Sprint vs Milestone</td><td>Milestone weekly Thu/Fri; client Sprint Mon/Tue (Milestone SOP)</td><td>Sprint call weekly OR Milestone per finished project (Launchpad script); “Sprint Meeting” is also the internal team meeting</td></tr>
+      <tr><td class="k">Post-placement cadence</td><td>Client and VA calls bi-weekly to day 90, then monthly (Internal Team Process)</td><td>Coaching weeks 2/4/6/8 only, plus Day 30/60/90 reviews (UNLOCK)</td></tr>
+      <tr><td class="k">Sales handoff format</td><td>8-section Blueprint Prep Brief by email/PDF (SOP, Sales Guide)</td><td>9–10 field list in the CRM or Levrly OS (scripts)</td></tr>
+      <tr><td class="k">Onboarding department</td><td>OA team runs onboarding on the combined call</td><td>Separate Onboarding team plus three extra OA calls (Pre-Handover Checklist)</td></tr>
+      <tr><td class="k">VA pay estimate</td><td>$5–$7/hr (Sales Call Guide reference deal)</td><td>Tiers $4–$6 / $6–$10 / $10–$15+ (scripts)</td></tr>
+      <tr><td class="k">Proposal OA timeline</td><td>20 hours in 4 phases (OA docs)</td><td>“90-day” OA timeline in sales proposals (ESC-0012)</td></tr>
+      <tr><td class="k">Document housekeeping</td><td colspan="2">PDF SOPs say v2.0 in the header and v1.0 in the footer. Sprint and Milestone booking links are cut off in the PDFs; publish the full URLs.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- SOURCES -->
+<section id="sources">
+  <div><div class="eyebrow">Library</div><h2>Source files</h2></div>
+  <p class="intro">Everything above comes from the <a href="https://drive.google.com/drive/folders/16nKimfGQnLduWGCEN2DQvfiDy2iGD6sO" target="_blank" rel="noopener">Operations Architect Team Process</a> folder. Treat the source file as the authority when it differs from this summary.</p>
+  <div class="tbl item"><table>
+    <thead><tr><th>Document</th><th>Type</th><th>Area</th></tr></thead>
+    <tbody>
+      <tr><td><a href="https://drive.google.com/file/d/1t2rKmmxya7lKrGfd2sLYZsXH7n5TINuC/view" target="_blank" rel="noopener">Levrly Escalation Tracker</a></td><td>Spreadsheet</td><td>Escalations</td></tr>
+      <tr><td><a href="https://drive.google.com/file/d/1g0ZvgrnTN6eMJ2Henj6ID95pmLFxmrpE/view" target="_blank" rel="noopener">Levrly OA – Internal Team Process</a></td><td>PDF</td><td>Lifecycle</td></tr>
+      <tr><td><a href="https://drive.google.com/file/d/1VXLj0M76flVzrd_R-Zxp_Ys9hllQwxJm/view" target="_blank" rel="noopener">Levrly OA – The Onboarding &amp; Blueprint Process</a></td><td>PDF</td><td>Lifecycle</td></tr>
+      <tr><td><a href="https://drive.google.com/file/d/1nhkn9U9XbXOoCxa_Km9GOZPZpziMRVGu/view" target="_blank" rel="noopener">Levrly OA – The Launchpad Process</a></td><td>PDF</td><td>Lifecycle</td></tr>
+      <tr><td><a href="https://drive.google.com/file/d/1q_mXRsmY4wqouQwlhijqgMiR92PnSFda/view" target="_blank" rel="noopener">The OPTIMIZE Method – OA Team Internal Workflow</a></td><td>PDF</td><td>Method</td></tr>
+      <tr><td><a href="https://drive.google.com/file/d/1sUhH9DkX_9X6IPvcw6s3X7vRMd0qBQN5/view" target="_blank" rel="noopener">The UNLOCK Method — OA Team Delivery System</a></td><td>PDF</td><td>Method</td></tr>
+      <tr><td><a href="https://drive.google.com/file/d/1rtl3-SgQlZtz3oR49DE-akqA4WX2-4UI/view" target="_blank" rel="noopener">OA Pre-Handover Checklist &amp; Client Questions</a></td><td>PDF</td><td>SOP</td></tr>
+      <tr><td><a href="https://drive.google.com/file/d/1wM1HQmpEZ5j02NUSKequcC44-EPj-7zC/view" target="_blank" rel="noopener">SOP: Reviewing Sales Handoff Notes</a></td><td>PDF</td><td>SOP</td></tr>
+      <tr><td><a href="https://drive.google.com/file/d/1pfHGMD_lsL9Zoi_nKRt5fVcAAfClWm0d/view" target="_blank" rel="noopener">SOP: Onboarding and Blueprint Process</a></td><td>PDF</td><td>SOP</td></tr>
+      <tr><td><a href="https://drive.google.com/file/d/1SJq27u_Tfiq8wx96ZeSZNMhJpo7xKOMw/view" target="_blank" rel="noopener">SOP: Reviewing Onboarding and Blueprint Calls</a></td><td>PDF</td><td>SOP</td></tr>
+      <tr><td><a href="https://drive.google.com/file/d/11eHR01DmjfHLmWDyBqTgKzCRe64CKHeh/view" target="_blank" rel="noopener">OA Milestone Meetings SOP v2.0</a></td><td>Word</td><td>SOP</td></tr>
+      <tr><td><a href="https://drive.google.com/file/d/1Qeq4LOuHd6NBVklr-CLKhw4prC852g9P/view" target="_blank" rel="noopener">OA Sprint Meeting SOP v2.0</a></td><td>Word</td><td>SOP</td></tr>
+      <tr><td><a href="https://drive.google.com/file/d/1_UnEVmxRDZrtKVZ1Ux2fg5_UYO1oxGE3/view" target="_blank" rel="noopener">Levrly Sales Call Guide</a></td><td>PDF</td><td>SOP</td></tr>
+      <tr><td><a href="https://drive.google.com/file/d/1Yasm4ZBPuLHFzgm72UUHe2uNp-bVV4tR/view" target="_blank" rel="noopener">Levrly Foundation Call Script</a></td><td>PDF</td><td>Script</td></tr>
+      <tr><td><a href="https://drive.google.com/file/d/1CQFEPXj0kLBAEvsKmeQrPxZkWULzRSJy/view" target="_blank" rel="noopener">Levrly Build Call Script</a></td><td>PDF</td><td>Script</td></tr>
+      <tr><td><a href="https://drive.google.com/file/d/1r5tK739iiSOwxk__OEHgSPheSE3E3aW3/view" target="_blank" rel="noopener">Levrly Scale Call Script</a></td><td>PDF</td><td>Script</td></tr>
+      <tr><td><a href="https://drive.google.com/file/d/1TixmrAoNwSiEr-z3Gbjt06NDKg5i84q8/view" target="_blank" rel="noopener">Levrly Launchpad Script</a></td><td>PDF</td><td>Script</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+</main>
+</div>
+
+<script>
+// [id, reported, dept, client, plan, priority, category, status, issue, outcome/next, owner, resolvedDate, openNext]
+const CASES = [
+["ESC-0001","May 15","Client Success","Mayleene Defreece","Build","P2","Contract / Policy","Resolved","Client paid without signing the Levrly contract.","Contract signed and payment confirmed May 22. Tara to automate sign-before-pay.","Tara Berry","May 22",""],
+["ESC-0002","May 18","Client Success","Mayleene Defreece","Build","P3","Billing","Resolved","VA couldn't start week one; asked to move the client's payment date.","Payment date not moved. Justin: Levrly doesn't guarantee VA performance.","Ann Secorata","May 18",""],
+["ESC-0003","May 21","Client Success","Mayleene Defreece (VA: Princess)","Build","P3","Contract / Policy","Resolved","Client wanted paid holiday terms added to the signed VA Agreement.","Addendum issued as a client–VA agreement; Joel and Justin approved.","Ann Secorata","May 21",""],
+["ESC-0004","May 21","Recruitment","Liz Dykes","Other","P3","Recruitment","Resolved","Client over Sphere Accelerator limit (5 VAs) wanted another for bookkeeping.","Assist with this last placement; no upgrade pushed.","Kristine Enciso","May 21",""],
+["ESC-0005","May 27","Client Success","Jennifer Smeltzer","Build","P3","Billing","Resolved","Double-charged in March; May payment shouldn't have been collected.","Refunded; billing paused until July 17.","Tara Berry","May 27",""],
+["ESC-0006","Jun 5","Sales","Josh Pennebaker (Hometown Mortgage)","Other","P2","Contract / Policy","Resolved","Sent to Recruitment before signed contract or payment; affiliate pricing unclear.","50% off any standard package. Rule set: no handoff without signed contract + payment.","Tara Berry","Jun 17","Confirm Josh's final plan and signed contract are on file."],
+["ESC-0007","Jun 6","Recruitment","Liz Dykes","Other","P3","Contract / Policy","Resolved","Placement dropped without notice after screening and interviews.","Recurred as ESC-0010.","Kristine Enciso","","Draft the placement withdrawal notice clause/SOP and get leadership sign-off."],
+["ESC-0008","Jun 9","Operations","Internal – Levrly team (Paul)","","P3","VA Performance","Resolved","Screenshot monitoring disabled since May 20.","LOE requested; team told to raise tech issues proactively.","Ann Secorata","Jun 9",""],
+["ESC-0009","Jul 1","Operations","Drew Francis","Build","P2","CRM / Systems","Resolved","Staff OS login failures; OS payment link had no HTTPS.","Paid through GHL; contract signed July 2.","Ann Secorata","Jul 2",""],
+["ESC-0010","Jul 16","Recruitment","Liz Dykes","Other","P3","Recruitment","Resolved","Client repeatedly cancelled placements after sourcing.","Placement completed Aug 1. Justin: we need a policy; Joel: start with a conversation.","Kristine Enciso","Aug 1","Write the placement cancellation policy (see ESC-0007)."],
+["ESC-0011","Jul 30","Client Success","Drew Francis","Build","P4","CRM / Systems","Resolved","GHL gaps: no native market reports; IDX needs third-party apps.","Superseded by the client's cancellation (ESC-0014).","Ann Secorata","Sep 23",""],
+["ESC-0012","Aug 19","Sales","LeAnn Sather / Albi referral","Build","P3","Contract / Policy","Resolved","Proposals quoted a 90-day OA timeline; prospects handed off before signing and paying.","Tara: clarify timeline with Justin.","Ann Secorata","","Confirm OA timeline language with Justin and update proposal templates."],
+["ESC-0013","Aug 25","Operations","Internal – OA team VA","","P2","VA Performance","Resolved","No-shows, client email mistakes, late excuse email.","2-week evaluation, then terminated Sep 29; access removed.","Ann Secorata","Sep 29",""],
+["ESC-0014","Sep 12","Client Success","Drew & Caitie Francis (VA: Mae)","Build","P2","VA Performance","Resolved","Missed deadlines, unresponsive VA, value vs $700/mo.","Client ended Sep 23; billing stopped Oct 6. Justin: let them cancel gracefully.","Ann Secorata","Oct 6",""],
+["ESC-0015","Sep 22","Client Success","Ricky Gehret (DC Conserv)","Other","P3","CRM / Systems","Resolved","Won't transfer GHL to Levrly's agency but wants the same support.","Approved: support through guidance and GHL email support.","Ann Secorata","Sep 23",""],
+["ESC-0016","Sep 22","Client Success","Margaret Labus (VA: Julius)","Foundation","P3","VA Performance","Resolved","Off-brand video work; 4-hour packages billed at 16 hours.","Coaching call held Sep 24.","Ann Secorata","","Confirm the Sep 24 call outcome and whether billed hours were adjusted."],
+["ESC-0017","Sep 25","Client Success","Jennifer Smeltzer","Build","P2","Billing","Resolved","Charged twice in September.","Tara: refund the overage.","Tara Berry","","Confirm the refund posted in Stripe; check for a repeat charge."],
+["ESC-0018","Oct 1","Recruitment","Shanda Spire (via Rusty)","Scale","P3","Recruitment","Resolved","$5–6/hr too low for a bilingual medical receptionist.","Placement handed over Nov 3.","Kristine Enciso","Nov 3",""],
+["ESC-0019","Oct 10","Client Success","Janet Brooks & Brian Dieffenbach (VA: Mae Lopez)","Scale","P3","VA Performance","Resolved","Role pivoted from TC to compliance and admin.","Transition plan and weekly compliance coaching.","Ann Secorata","Oct 10",""],
+["ESC-0020","Oct 10","Recruitment","VA candidate: Rosie","Other","P4","Recruitment","Resolved","Rejected four times despite positive engagement.","Directed to courses and coaching to reapply.","Ann Secorata","Oct 10",""],
+["ESC-0021","Oct 22","Sales","Ashley (brokerage, ~150 agents)","Other","P4","Client Support","Resolved","Budget limits; discovery recording missing.","Tara: don't be pushy; wait until end of week.","Ann Secorata","","Follow up with Ashley and send documents once she responds."],
+["ESC-0022","Oct 26","Recruitment","Chad Aronson (Team Tami)","Scale","P3","Billing","Resolved","$500 deposit broke Stripe/OS billing; candidates above budget.","Custom invoice + Docusign; $699 paid Oct 31. Recruitment flags over-budget candidates.","Tara Berry","Oct 31",""],
+["ESC-0023","Oct 29","Client Success","Drew Francis (VA: Mae Akut)","Build","P3","VA Performance","Resolved","VA contract ending Nov 2; client trying it alone.","Review call assigned to CK.","Ann Secorata","Nov 2",""],
+["ESC-0024","Oct 30","Operations","Wayde Burkhart & Ricky Gehret","Launchpad","P2","CRM / Systems","Resolved","Client profiles lost in Levrly OS.","Master backup folder created for all contracts.","Ann Secorata","Oct 30",""],
+["ESC-0025","Nov 4","Client Success","Wayde Burkhart","Launchpad","P2","Billing","Resolved","Auto-charged $499 against contract terms; renewal price unclear.","Nov 20: committed to OA plan at $999/mo, 12 months from Dec 7.","Tara Berry","","Ann sends agreement and confirms upfront discount with Justin; Tara sets up billing."],
+["ESC-0026","Nov 12","Client Success","LeAnn Sather (VA: Franz)","Build","P4","VA Performance","Resolved","VA needs more TC and GHL skills.","Weekly TC training with Lyrica (Tue 2 PM) plus GHL training.","Ann Secorata","Nov 12",""],
+["ESC-0027","Nov 12","Client Success","Binger (Binger Show)","Scale","P3","Contract / Policy","Resolved","Paid $999 Launchpad; no signed contract on file.","Justin sent the contract; onboarding booked.","Tara Berry","Nov 12",""],
+["ESC-0031","Nov 17","Recruitment","Jason & Jennifer Giles (ISA team)","Other","P3","Recruitment","Resolved","$3/hr ISA base conflicts with website “from $5/hr”.","Tara: one-off; commission brings ISAs above $5/hr. Target Nov 25.","Kristine Enciso","","Justin and marketing decide the website rate claim; Kristine sources for Nov 25 alignment."],
+["ESC-0028","Nov 19","Sales","Sales process – Patrick Gonzales","Other","P2","Contract / Policy","Resolved","Month-to-month pitches and a custom $599 plan outside the catalog.","All VA contracts are 12 months; overrides documented. Target Nov 27.","Tara Berry","","Hazelyn confirms Jer deal terms; Ann logs each sales error for training."],
+["ESC-0029","Nov 19","Operations","Chris, Anthony Medina & Thomas","Other","P3","Billing","Resolved","One-time Stripe payments instead of subscriptions; duplicate products.","Target Nov 27.","Tara Berry","","Tara converts 3 accounts, cleans Stripe products, records a training video."],
+["ESC-0030","Nov 19","Client Success","Thomas (Blueprint Nov 16)","Scale","P2","Contract / Policy","In Progress","HSA coach upset; client asked for refund; contract plan wrong.","Onboarding paused. Target Nov 27.","Tara Berry","","Hazelyn schedules 3-way call (coach, client, Tara); correct the contract."],
+["ESC-0032","Nov 20","Recruitment","Ricky Gehret (via Rusty)","Other","P3","Contract / Policy","In Progress","EA/Ops VA request went to Recruitment before onboarding or payment.","Last exception from Rusty. Alignment Dec 3.","Tara Berry","","Tara invoices Rusty; Ann runs OS/GHL walkthrough; Kristine tells Ann when sourcing starts."],
+["ESC-0033","Nov 20","Marketing","Internal – Levrly social (Meta)","","P2","CRM / Systems","Resolved","Meta took down accounts after detecting AI automation.","Restored after ID verification and appeal; bots removed.","CK Crockett","Nov 20",""]
+];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const needs = c => c[7] !== "Resolved" || c[12];
+
+function attention(){
+  const list = CASES.filter(needs);
+  const el = document.getElementById('attention');
+  el.innerHTML = `<h3>Needs attention (${list.length})</h3><ul class="tight">` +
+    list.map(c => `<li><b>${c[0]}</b> · ${esc(c[3])}: ${esc(c[12])} <span class="chip">${esc(c[10])}</span>${c[7]!=="Resolved"?' <span class="st prog">In Progress</span>':''}</li>`).join('') + '</ul>';
+}
+function render(){
+  const s = fStatus.value, d = fDept.value, p = fPri.value, k = fCat.value;
+  const rows = CASES.filter(c =>
+    (!s || (s==="open" ? needs(c) : c[7]===s)) && (!d || c[2]===d) && (!p || c[5]===p) && (!k || c[6]===k));
+  document.getElementById('caseRows').innerHTML = rows.map(c => {
+    const st = c[7]!=="Resolved" ? '<span class="st prog">In Progress</span>' : (c[12] ? '<span class="st open">Resolved · step open</span>' : '<span class="st res">Resolved</span>');
+    const out = esc(c[9]) + (c[12] ? `<br><b>Next:</b> ${esc(c[12])}` : '') + (c[11] ? `<br><span style="color:var(--faint)">Resolved ${c[11]}</span>` : '');
+    return `<tr class="case"><td class="id">${c[0]}</td><td class="num" style="white-space:nowrap">${c[1]}</td><td><span class="pri ${c[5]}">${c[5]}</span></td><td>${st}</td><td>${esc(c[2])}<br><span style="color:var(--faint)">${esc(c[6])}</span></td><td>${esc(c[3])}${c[4]?`<br><span class="chip">${esc(c[4])}</span>`:''}</td><td class="issue">${esc(c[8])}</td><td class="issue">${out}</td><td style="white-space:nowrap">${esc(c[10])}</td></tr>`;
+  }).join('') || '<tr><td colspan="9">No cases match these filters.</td></tr>';
+  document.getElementById('caseCount').textContent = `${rows.length} of ${CASES.length} cases`;
+  applySearch();
+}
+const fStatus=document.getElementById('fStatus'),fDept=document.getElementById('fDept'),fPri=document.getElementById('fPri'),fCat=document.getElementById('fCat');
+[fStatus,fDept,fPri,fCat].forEach(e=>e.addEventListener('change',render));
+
+// search across content blocks and case rows
+const q = document.getElementById('q'), hits = document.getElementById('hits');
+function applySearch(){
+  const term = q.value.trim().toLowerCase();
+  let n = 0;
+  document.querySelectorAll('.item, tr.case').forEach(el => {
+    const show = !term || el.textContent.toLowerCase().includes(term);
+    el.classList.toggle('hide', !show);
+    if (show && term) { n++; if (el.tagName==='DETAILS') el.open = true; }
+  });
+  document.querySelectorAll('main section').forEach(sec => {
+    if (!term) { sec.classList.remove('hide'); return; }
+    const any = sec.querySelector('.item:not(.hide), tr.case:not(.hide)');
+    sec.classList.toggle('hide', !any);
+  });
+  hits.textContent = term ? `${n} match${n===1?'':'es'}` : '';
+}
+q.addEventListener('input', applySearch);
+attention(); render();
+</script>
+
+</html>
