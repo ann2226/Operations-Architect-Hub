@@ -17,6 +17,7 @@ When this repository and a source document disagree, the source document is the 
 | [06 Conflicts to Resolve](docs/06-conflicts-to-resolve.md) | Points where the source documents disagree, with a column for the decision |
 | [OA Process Hub (interactive page)](hub/index.html) | The same content on one searchable page, with a filterable escalation case log |
 | [Client & VA Consult tracker](data/client-va-consult/README.md) | Daily copy of the Levrly Monthly Client and VA Consult sheet: overview, client calls, VA calls, client list ([setup](#daily-sheet-sync)) |
+| [Escalation Tracker](data/escalation-tracker/README.md) | Daily copy of the Levrly Escalation Tracker: dashboard and every logged escalation case |
 
 ## Who owns what
 
@@ -61,10 +62,17 @@ Only Sales quotes prices. Never quote upgrade or add-on prices on an OA call; fl
 
 ## Daily sheet sync
 
-`.github/workflows/sync-client-va-consult.yml` copies every tab of the [Levrly Monthly Client and VA Consult](https://docs.google.com/spreadsheets/d/11KlOJOYk1RtAueViHBb0g_L4Wx56p9LLBG_3tRNOuPA/edit) sheet into `data/client-va-consult/` as CSV once a day (11:00 UTC), and commits only when the sheet changed. Run it any time from **Actions → Sync Client & VA Consult sheet → Run workflow**. The job stops if this repository is public.
+`.github/workflows/sync-sheets.yml` runs `scripts/sync_sheets.py` once a day (11:00 UTC). It copies every tab of these spreadsheets into `data/` as CSV and commits only when something changed:
+
+| Spreadsheet | Copied to |
+| :---- | :---- |
+| [Levrly Monthly Client and VA Consult](https://docs.google.com/spreadsheets/d/11KlOJOYk1RtAueViHBb0g_L4Wx56p9LLBG_3tRNOuPA/edit) (Google Sheet) | `data/client-va-consult/` |
+| [Levrly Escalation Tracker](https://docs.google.com/spreadsheets/d/1t2rKmmxya7lKrGfd2sLYZsXH7n5TINuC/edit) (.xlsx in Drive) | `data/escalation-tracker/` |
+
+To add another spreadsheet, add an entry to `SOURCES` in the script. Run it any time from **Actions → Sync spreadsheets → Run workflow**. The job stops if this repository is public.
 
 One-time setup:
 
-1. In Google Cloud, create a service account, enable the Google Sheets API, and download a JSON key.
-2. Share the sheet with the service account's email as **Viewer**.
+1. In Google Cloud, create a service account, enable the **Google Sheets API** and the **Google Drive API**, and download a JSON key.
+2. Share both spreadsheets with the service account's email as **Viewer**.
 3. In this repository: **Settings → Secrets and variables → Actions → New repository secret**, name `GOOGLE_SERVICE_ACCOUNT_JSON`, value = the whole JSON key.

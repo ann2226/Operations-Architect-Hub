@@ -1,4 +1,4 @@
-name: Sync Client & VA Consult sheet
+name: Sync spreadsheets
 
 on:
   schedule:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: sync-client-va-consult
+  group: sync-sheets
   cancel-in-progress: false
 
 jobs:
@@ -33,22 +33,28 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install google-api-python-client==2.151.0 google-auth==2.36.0
+        run: pip install google-api-python-client==2.151.0 google-auth==2.36.0 openpyxl==3.1.5
 
-      - name: Export sheet
+      - name: Export spreadsheets
+        id: export
+        continue-on-error: true # still commit the sources that worked
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
-        run: python scripts/sync_client_va_consult.py
+        run: python scripts/sync_sheets.py
 
-      - name: Commit if the sheet changed
+      - name: Commit if anything changed
         run: |
-          if git diff --quiet -- data/client-va-consult/*.csv && \
-             [ -z "$(git ls-files --others --exclude-standard data/client-va-consult)" ]; then
-            echo "No changes in the sheet since the last sync."
+          if git diff --quiet -- 'data/**/*.csv' && \
+             [ -z "$(git ls-files --others --exclude-standard data)" ]; then
+            echo "No changes since the last sync."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898613+github-actions[bot]@users.noreply.github.com"
-          git add data/client-va-consult
-          git commit -m "Sync Client & VA Consult sheet ($(date -u +%Y-%m-%d))"
+          git add data
+          git commit -m "Sync spreadsheets ($(date -u +%Y-%m-%d))"
           git push
+
+      - name: Fail the run if any source failed
+        if: steps.export.outcome == 'failure'
+        run: exit 1
